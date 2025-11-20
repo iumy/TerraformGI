@@ -22,8 +22,10 @@ Steps:
         - eks nodes
     - Architecture:
         - Internet Gateway
+        - Public Subnets
         - NAT Gateways
         - ALB 
+        - Private Subnets
         - EKS Control plane
         - EKS Worker Nodes
         - 2 Availability Zone
