@@ -33,8 +33,8 @@ jobs:
 
       - id: set_dirs
         run: |
-          dirs=$(ls -d tests/*/ | jq -R . | jq -s .)
-          echo "test_dirs=$dirs" >> $GITHUB_OUTPUT
+          dirs=$(find tests -mindepth 1 -maxdepth 1 -type d -printf '%p\n' | jq -R . | jq -s -c .)
+          echo "test_dirs=${dirs}" >> $GITHUB_OUTPUT
 
   test-modules:
     needs: discover-tests
