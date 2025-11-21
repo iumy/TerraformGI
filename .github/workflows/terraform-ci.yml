@@ -61,6 +61,7 @@ jobs:
         run: terraform plan -out=tfplan.binary
       
       - name: Show Plan
+        working-directory: ${{ matrix.testdir }}
         run: terraform show -json tfplan.binary > tfplan.json
 
       - name: Upload plan file
@@ -73,4 +74,5 @@ jobs:
         uses: infracost/actions/setup@v3
 
       - name: Infracost breakdown
+        working-directory: ${{ matrix.testdir }}
         run: infracost breakdown --path tfplan.json --format json --out-file infracost.json
