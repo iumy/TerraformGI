@@ -15,6 +15,15 @@ terraform {
     }
   }
 }
+
+provider "aws" {
+  region                      = "us-east-1"
+  access_key                  = "dummy"
+  secret_key                  = "dummy"
+  skip_credentials_validation = true
+  skip_region_validation      = true
+  skip_requesting_account_id  = true
+}
 module "networking" {
   source = "../../modules/networking"
 
