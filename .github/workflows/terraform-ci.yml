@@ -64,10 +64,17 @@ jobs:
         working-directory: ${{ matrix.testdir }}
         run: terraform show -json tfplan.binary > tfplan.json
 
+      - name: Sanitize artifact name
+        id: sanitize
+        run: |
+         safe_name="${{ matrix.testdir }}"
+         safe_name="${safe_name//\//_}"
+         echo "safe_name=$safe_name" >> "$GITHUB_OUTPUT"
+
       - name: Upload plan file
         uses: actions/upload-artifact@v4
         with:
-          name: plan-${{ matrix.testdir##*/ }}
+          name: plan-${{ steps.sanitize.outputs.safe_name }}
           path: ${{ matrix.testdir }}/tfplan.binary
 
       - name: Setup Infracost
