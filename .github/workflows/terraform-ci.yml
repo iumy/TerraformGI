@@ -63,5 +63,14 @@ jobs:
       - name: Show Plan
         run: terraform show -json tfplan.binary > tfplan.json
 
-      - name: Run Infracost
-        uses: infracost/infracost-action@v3
+      - name: Upload plan file
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-${{ matrix.testdir }}
+          path: ${{ matrix.testdir }}/tfplan.binary
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+
+      - name: Infracost breakdown
+        run: infracost breakdown --path tfplan.json --format json --out-file infracost.json
