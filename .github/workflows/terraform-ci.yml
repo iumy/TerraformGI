@@ -15,8 +15,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Format Check
-        #run: terraform fmt -check -recursive
-        run: terraform fmt -check -recursive $(find . -type f -name "*.tf" ! -path "./tests/*")
+        run: terraform fmt -check -recursive -diff
 
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@v4
