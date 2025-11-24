@@ -79,6 +79,8 @@ jobs:
 
       - name: Setup Infracost
         uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
 
       - name: Infracost breakdown
         working-directory: ${{ matrix.testdir }}
