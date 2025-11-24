@@ -85,3 +85,15 @@ jobs:
       - name: Infracost breakdown
         working-directory: ${{ matrix.testdir }}
         run: infracost breakdown --path tfplan.json --format json --out-file infracost.json
+
+      - name: Upload Infracost result
+        uses: actions/upload-artifact@v4
+        with:
+          name: infracost-${{ steps.sanitize.outputs.safe_name }}
+          path: ${{ matrix.testdir }}/infracost.json
+
+      - name: Show Infracost output
+        working-directory: ${{ matrix.testdir }}
+        run: cat infracost.json | jq
+
+      
