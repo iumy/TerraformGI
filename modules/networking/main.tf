@@ -127,7 +127,7 @@ resource "aws_route_table_association" "public" {
 # ============================================================================
 
 resource "aws_route_table" "private" {
-  count = length(var.availability_zones) 
+  count = length(var.availability_zones)
 
   vpc_id = aws_vpc.main.id
 
