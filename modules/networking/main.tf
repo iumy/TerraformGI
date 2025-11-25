@@ -40,7 +40,7 @@ resource "aws_eip" "nat" {
   }
 
   # EIP may require IGW to exist prior to association
-  depends_on = [aws_internet_gateway.main]
+  depends_on = [aws_internet_gateway.gateway]
 }
 
 # ============================================================================
@@ -50,7 +50,7 @@ resource "aws_eip" "nat" {
 resource "aws_subnet" "public" {
   count = length(var.public_subnet_cidrs)
 
-  vpc_id                  = aws_vpc.main.id
+  vpc_id                  = aws_vpc.vpc1.id
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = true
@@ -67,7 +67,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   count = length(var.private_subnet_cidrs)
 
-  vpc_id                  = aws_vpc.main.id
+  vpc_id                  = aws_vpc.vpc1.id
   cidr_block              = var.private_subnet_cidrs[count.index]
   availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = false
@@ -81,7 +81,7 @@ resource "aws_subnet" "private" {
 # NAT GATEWAYS
 # ============================================================================
 
-resource "aws_nat_gateway" "main" {
+resource "aws_nat_gateway" "natgwy" {
   count = length(var.availability_zones)
 
   allocation_id = aws_eip.nat[count.index].id
@@ -92,7 +92,7 @@ resource "aws_nat_gateway" "main" {
     AZ   = var.availability_zones[count.index]
   }
 
-  depends_on = [aws_internet_gateway.main]
+  depends_on = [aws_internet_gateway.gateway]
 }
 
 # ============================================================================
@@ -100,11 +100,11 @@ resource "aws_nat_gateway" "main" {
 # ============================================================================
 
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.vpc1.id
 
   route {
     cidr_block = "0.0.0.0/0" # ALL internet traffic
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.gateway.id
   }
 
   tags = {
@@ -129,7 +129,7 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   count = length(var.availability_zones)
 
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.vpc1.id
 
   tags = {
     Name = "${var.environment}-private-rt-${count.index + 1}"
@@ -145,7 +145,7 @@ resource "aws_route" "private_nat" {
 
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.main[count.index].id
+  nat_gateway_id         = aws_nat_gateway.natgwy[count.index].id
 }
 
 # ============================================================================
