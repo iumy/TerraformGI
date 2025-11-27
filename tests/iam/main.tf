@@ -26,7 +26,7 @@ provider "aws" {
 }
 
 module "iam" {
-  source      = "../../modules/iam"
-  environment = "Dev"
+  source       = "../../modules/iam"
+  environment  = "Dev"
   cluster_name = "eks-cluster"
 }
