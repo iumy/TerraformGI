@@ -108,7 +108,7 @@ jobs:
         run: cat infracost.json | jq
 
   terraform-apply:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     needs: test-modules
     runs-on: ubuntu-latest
     name: Terraform Apply Root
