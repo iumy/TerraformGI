@@ -20,7 +20,7 @@ provider "aws" {
   default_tags {
     tags = {
       Environment = "Dev"
-      Service = "EKS_Cluster"
+      Service     = "EKS_Cluster"
     }
   }
 }
@@ -29,7 +29,7 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 module "networking" {
-  source = "../../modules/networking"
+  source      = "../../modules/networking"
   environment = "Dev"
   #aws_region  = "us-east-1" 
   vpc_cidr             = "10.0.0.0/16"
