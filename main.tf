@@ -4,7 +4,6 @@
 
 terraform {
   required_version = ">= 1.0"
-  
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -46,7 +45,7 @@ module "networking" {
   environment          = var.environment
   availability_zones   = slice(data.aws_availability_zones.available.names, 0, 2)
   public_subnet_cidrs  = var.public_subnet_cidrs
-  private_subnet_cidrs = var.private_subnet_cidrs 
+  private_subnet_cidrs = var.private_subnet_cidrs
 }
 
 # ============================================================================
