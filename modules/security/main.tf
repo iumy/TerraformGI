@@ -8,6 +8,9 @@
 # Purpose: Control plane security group
 # EKS automatically creates and manages cluster security group
 # This is an additional security group for custom rules if needed
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+# https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html
+# https://docs.aws.amazon.com/eks/latest/eksctl/vpc-configuration.html#:~:text=The%20default%20VPC%20CIDR%20used,2%20private%20subnets%20by%20default.
 
 resource "aws_security_group" "cluster" {
   name_prefix = "${var.environment}-eks-cluster-sg-"
