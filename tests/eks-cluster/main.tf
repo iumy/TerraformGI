@@ -25,6 +25,9 @@ provider "aws" {
   }
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 module "networking" {
   source      = "../../modules/networking"
   environment = "Dev"
@@ -40,6 +43,11 @@ module "security" {
   environment = "Dev"
   vpc_cidr    = "10.0.0.0/16"
   vpc_id      = module.networking.vpc_id
+}
+module "iam" {
+  source       = "../../modules/iam"
+  environment  = "Dev"
+  cluster_name = "eks-cluster"
 }
 module "eks-cluster" {
   source                    = "../../modules/eks-cluster"

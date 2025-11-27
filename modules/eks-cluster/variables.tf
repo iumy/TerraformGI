@@ -34,7 +34,7 @@ variable "environment" {
   description = "Environment name"
   type        = string
 }
-
+/*
 variable "vpc_cni_version" {
   description = "VPC CNI addon version"
   type        = string
@@ -52,3 +52,4 @@ variable "kube_proxy_version" {
   type        = string
   default     = ""
 }
+*/
