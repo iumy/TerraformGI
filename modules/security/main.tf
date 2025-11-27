@@ -15,7 +15,7 @@ resource "aws_security_group" "cluster" {
   vpc_id      = var.vpc_id
 
   tags = {
-    Name        = "${var.environment}-eks-cluster-sg"
+    Name = "${var.environment}-eks-cluster-sg"
   }
 
   lifecycle {
@@ -147,7 +147,7 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name        = "${var.environment}-eks-alb-sg"
+    Name = "${var.environment}-eks-alb-sg"
   }
 
   lifecycle {
