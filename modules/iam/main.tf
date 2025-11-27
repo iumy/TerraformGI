@@ -23,7 +23,7 @@ resource "aws_iam_role" "cluster" {
   })
 
   tags = {
-    Name = "${var.cluster_name}-cluster-role"
+    Name = "${var.environment}-${var.cluster_name}-cluster-role"
   }
 }
 
@@ -57,7 +57,7 @@ resource "aws_iam_role" "node" {
   })
 
   tags = {
-    Name = "${var.cluster_name}-node-role"
+    Name = "${var.environment}-${var.cluster_name}-node-role"
   }
 }
 
