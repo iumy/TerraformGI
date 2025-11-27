@@ -107,4 +107,64 @@ jobs:
         working-directory: ${{ matrix.testdir }}
         run: cat infracost.json | jq
 
+  terraform-apply:
+    if: github.ref == 'refs/heads/main'
+    needs: test-modules
+    runs-on: ubuntu-latest
+    name: Terraform Apply Root
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5.1.0
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan.binary
+      
+      - name: Show Plan
+        run: terraform show -json tfplan.binary > tfplan.json
+
+      - name: Upload plan file
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-plan
+          path: tfplan.binary
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Infracost breakdown
+        run: infracost breakdown --path tfplan.json --format json --out-file infracost.json
+
+      - name: Upload Infracost result
+        uses: actions/upload-artifact@v4
+        with:
+          name: infracost
+          path: infracost.json
+
+      - name: Show Infracost output
+        run: cat infracost.json | jq
+      
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+      - name: Wait
+        run: sleep 300
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+
       
