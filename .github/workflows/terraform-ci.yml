@@ -159,7 +159,7 @@ jobs:
         run: cat infracost.json | jq
       
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve tfplan.binary
 
       - name: Wait
         run: sleep 300
