@@ -5,6 +5,8 @@
 # ============================================================================
 # VPC
 # ============================================================================
+# network requirements from https://docs.aws.amazon.com/eks/latest/userguide/network-reqs.html
+# https://docs.aws.amazon.com/eks/latest/best-practices/subnets.html (one NAT gateway per AZ)
 resource "aws_vpc" "vpc1" {
   cidr_block = var.vpc_cidr
 
