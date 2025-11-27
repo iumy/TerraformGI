@@ -5,7 +5,7 @@ output "vpc_id" {
 
 output "vpc_cidr" {
   description = "CIDR block of the VPC"
-  value       = aws_vpc.main.cidr_block
+  value       = aws_vpc.vpc1.cidr_block
 }
 
 output "public_subnet_ids" {
@@ -25,7 +25,7 @@ output "availability_zones" {
 
 output "nat_gateway_ids" {
   description = "IDs of NAT Gateways"
-  value       = aws_nat_gateway.main[*].id
+  value       = aws_nat_gateway.natgwy[*].id
 }
 
 output "nat_gateway_public_ips" {
