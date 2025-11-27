@@ -30,7 +30,6 @@ Steps:
         - EKS Worker Nodes
         - 2 Availability Zone
 
-
         
 
 

@@ -6,6 +6,10 @@ on:
     branches:
        [ main, develop*, feature/* ]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -13,12 +17,94 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
 
       - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+        run: terraform fmt -check -recursive -diff
 
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@v4
 
       - name: Run TFLint
         run: tflint --recursive
+
+  discover-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      test_dirs: ${{ steps.set_dirs.outputs.test_dirs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: set_dirs
+        run: |
+          dirs=$(find tests -mindepth 1 -maxdepth 1 -type d -printf '%p\n' | jq -R . | jq -s -c .)
+          echo "test_dirs=${dirs}" >> $GITHUB_OUTPUT
+
+  test-modules:
+    needs: discover-tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        testdir: ${{ fromJson(needs.discover-tests.outputs.test_dirs) }}
+    name: Test module ${{ matrix.testdir }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5.1.0
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.testdir }}
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ${{ matrix.testdir }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: ${{ matrix.testdir }}
+        run: terraform plan -out=tfplan.binary
+      
+      - name: Show Plan
+        working-directory: ${{ matrix.testdir }}
+        run: terraform show -json tfplan.binary > tfplan.json
+
+      - name: Sanitize artifact name
+        id: sanitize
+        run: |
+         safe_name="${{ matrix.testdir }}"
+         safe_name="${safe_name//\//_}"
+         echo "safe_name=$safe_name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload plan file
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-${{ steps.sanitize.outputs.safe_name }}
+          path: ${{ matrix.testdir }}/tfplan.binary
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Infracost breakdown
+        working-directory: ${{ matrix.testdir }}
+        run: infracost breakdown --path tfplan.json --format json --out-file infracost.json
+
+      - name: Upload Infracost result
+        uses: actions/upload-artifact@v4
+        with:
+          name: infracost-${{ steps.sanitize.outputs.safe_name }}
+          path: ${{ matrix.testdir }}/infracost.json
+
+      - name: Show Infracost output
+        working-directory: ${{ matrix.testdir }}
+        run: cat infracost.json | jq
+
+      
