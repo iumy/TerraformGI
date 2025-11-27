@@ -2,7 +2,6 @@
 # EKS CLUSTER MODULE 
 # ============================================================================
 # Purpose: Create AWS EKS cluster control plane
- 
 # ============================================================================
 # EKS CLUSTER
 # ============================================================================
@@ -41,7 +40,7 @@ resource "aws_eks_cluster" "main" {
   # reviewed: https://docs.aws.amazon.com/pdfs/eks/latest/best-practices/eks-bpg.pdf
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
-    tags = {
+  tags = {
     Name        = var.cluster_name
     Environment = var.environment
     ManagedBy   = "Terraform"
