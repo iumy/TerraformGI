@@ -68,15 +68,15 @@ output "node_group_status" {
 # APPLICATION OUTPUTS
 # ============================================================================
 
-output "application_url" {
-  description = "URL to access the application (may take 5-10 minutes to provision)"
-  value       = "http://${module.kubernetes_app.load_balancer_hostname}"
-}
+# output "application_url" {
+#  description = "URL to access the application (may take 5-10 minutes to provision)"
+#  value       = "http://${module.kubernetes_app.load_balancer_hostname}"
+#}
 
-output "load_balancer_hostname" {
-  description = "Load balancer hostname"
-  value       = module.kubernetes_app.load_balancer_hostname
-}
+# output "load_balancer_hostname" {
+#  description = "Load balancer hostname"
+# value       = module.kubernetes_app.load_balancer_hostname
+#}
 
 # ============================================================================
 # KUBECTL CONFIGURATION
@@ -94,12 +94,12 @@ output "configure_kubectl" {
 output "deployment_info" {
   description = "Complete deployment information"
   value = {
-    cluster_name        = module.eks_cluster.cluster_name
-    cluster_endpoint    = module.eks_cluster.cluster_endpoint
-    region              = var.aws_region
-    environment         = var.environment
-    node_count          = "${var.min_capacity}-${var.max_capacity} nodes"
-    application_url     = "http://${module.kubernetes_app.load_balancer_hostname}"
-    owner               = var.owner_name
+    cluster_name     = module.eks_cluster.cluster_name
+    cluster_endpoint = module.eks_cluster.cluster_endpoint
+    region           = var.aws_region
+    environment      = var.environment
+    node_count       = "${var.min_capacity}-${var.max_capacity} nodes"
+    # application_url  = "http://${module.kubernetes_app.load_balancer_hostname}"
+    owner = var.owner_name
   }
 }

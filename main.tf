@@ -68,8 +68,8 @@ module "security" {
 module "iam" {
   source = "./modules/iam"
 
-  environment    = var.environment
-  cluster_name   = local.cluster_name
+  environment  = var.environment
+  cluster_name = local.cluster_name
 }
 
 # ============================================================================
@@ -80,16 +80,14 @@ module "iam" {
 module "eks_cluster" {
   source = "./modules/eks-cluster"
 
-  cluster_name               = local.cluster_name
-  cluster_version            = var.cluster_version
-  subnet_ids                 = module.networking.private_subnet_ids
-  cluster_role_arn           = module.iam.cluster_role_arn
-  cluster_security_group_id  = module.security.cluster_sg_id
-  
+  cluster_name              = local.cluster_name
+  cluster_version           = var.cluster_version
+  subnet_ids                = module.networking.private_subnet_ids
+  cluster_role_arn          = module.iam.cluster_role_arn
+  cluster_security_group_id = module.security.cluster_sg_id
   # Best Practice: Enable control plane logging for audit and troubleshooting
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
-  
-  environment = var.environment
+  environment               = var.environment
 }
 
 # ============================================================================
@@ -99,24 +97,20 @@ module "eks_cluster" {
 module "eks_nodes" {
   source = "./modules/eks-nodes"
 
-  cluster_name        = module.eks_cluster.cluster_name
-  node_group_name     = "${local.cluster_name}-node-group"
-  node_role_arn       = module.iam.node_role_arn
-  subnet_ids          = module.networking.private_subnet_ids
-  
+  cluster_name    = module.eks_cluster.cluster_name
+  node_group_name = "${local.cluster_name}-node-group"
+  node_role_arn   = module.iam.node_role_arn
+  subnet_ids      = module.networking.private_subnet_ids
   # Instance configuration
   instance_types = [var.instance_type]
   desired_size   = var.desired_capacity
   min_size       = var.min_capacity
   max_size       = var.max_capacity
-  
   # Disk configuration
-  disk_size = var.node_disk_size
-  
-  environment    = var.environment
-  owner_name     = var.owner_name
-  
-  depends_on = [module.eks_cluster]
+  disk_size   = var.node_disk_size
+  environment = var.environment
+  owner_name  = var.owner_name
+  depends_on  = [module.eks_cluster]
 }
 
 # ============================================================================
@@ -138,13 +132,12 @@ provider "kubernetes" {
 # ============================================================================
 locals {
   cluster_name = "${var.environment}-eks-cluster"
-  
   # Common tags applied to all resources
   # Computed from user inputs in terraform.tfvars
   common_tags = {
-    Project        = "IaC-Assignment-EKS"
-    Environment    = var.environment
-    ManagedBy      = "Terraform"
-    Owner          = var.owner_name
+    Project     = "IaC-Assignment-EKS"
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+    Owner       = var.owner_name
   }
 }
