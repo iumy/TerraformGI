@@ -74,7 +74,7 @@ module "eks_nodes" {
   disk_size   = 20
   environment = "Dev"
   owner_name  = "Gianluca Iumiento"
-  depends_on  = [module.eks-cluster]
+  depends_on  = [module.eks_cluster]
 }
 
 data "aws_eks_cluster_auth" "cluster" {
