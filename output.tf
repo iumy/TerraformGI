@@ -100,6 +100,6 @@ output "deployment_info" {
     environment      = var.environment
     node_count       = "${var.min_capacity}-${var.max_capacity} nodes"
     # application_url  = "http://${module.kubernetes_app.load_balancer_hostname}"
-    owner            = var.owner_name
+    owner = var.owner_name
   }
 }

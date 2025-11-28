@@ -85,7 +85,6 @@ module "eks_cluster" {
   subnet_ids                = module.networking.private_subnet_ids
   cluster_role_arn          = module.iam.cluster_role_arn
   cluster_security_group_id = module.security.cluster_sg_id
-  
   # Best Practice: Enable control plane logging for audit and troubleshooting
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   environment               = var.environment
@@ -102,7 +101,6 @@ module "eks_nodes" {
   node_group_name = "${local.cluster_name}-node-group"
   node_role_arn   = module.iam.node_role_arn
   subnet_ids      = module.networking.private_subnet_ids
-  
   # Instance configuration
   instance_types = [var.instance_type]
   desired_size   = var.desired_capacity
