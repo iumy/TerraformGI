@@ -78,6 +78,6 @@ variable "node_disk_size" {
 variable "owner_name" {
   description = "Name of infrastructure owner"
   type        = string
-  default     = "Gianluca Iumiento"
+  default     = "GianlucaIumiento"
 }
 
