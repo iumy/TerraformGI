@@ -78,7 +78,7 @@ module "eks_nodes" {
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks-cluster.cluster_name
+  name = module.eks_cluster.cluster_name
 }
 
 provider "kubernetes" {
