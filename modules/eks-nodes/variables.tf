@@ -16,7 +16,6 @@ variable "node_role_arn" {
 variable "subnet_ids" {
   description = "List of subnet IDs for nodes (PRIVATE SUBNETS)"
   type        = list(string)
-  
   validation {
     condition     = length(var.subnet_ids) >= 2
     error_message = "At least 2 subnets required for high availability across AZs"

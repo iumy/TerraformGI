@@ -57,41 +57,4 @@ module "eks-cluster" {
   cluster_role_arn          = module.iam.cluster_role_arn
   subnet_ids                = module.networking.private_subnet_ids
 }
-module "eks_nodes" {
-  source          = "../../modules/eks-nodes"
-  cluster_name    = module.eks_cluster.cluster_name
-  node_group_name = "${local.cluster_name}-node-group"
-  node_role_arn   = module.iam.node_role_arn
-  subnet_ids      = module.networking.private_subnet_ids
 
-  instance_types = ["t3.small"]
-  desired_size   = 2
-  min_size       = 2
-  max_size       = 4
-  
-  # Disk configuration
-  disk_size   = 20
-  environment = "Dev"
-  owner_name  = "Gianluca Iumiento"
-  
-  depends_on = [module.eks_cluster]
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks_cluster.cluster_name
-}
-
-provider "kubernetes" {
-  host                   = module.eks_cluster.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks_cluster.cluster_ca_certificate)
-  token                  = data.aws_eks_cluster_auth.cluster.token
-}
-
-locals {
-  cluster_name = "Dev-eks-cluster"
-  common_tags = {
-    Environment    = "Dev"
-    ManagedBy      = "Terraform"
-    Owner          = "Gianluca Iumiento"
-  }
-}

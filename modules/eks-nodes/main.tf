@@ -21,15 +21,15 @@ resource "aws_eks_node_group" "main" {
   # Scaling configuration
   # Best Practice: Minimum 2 nodes across 2 AZs for high availability
   scaling_config {
-    desired_size = var.desired_size  # Target number of nodes
-    max_size     = var.max_size      # Maximum for auto-scaling
-    min_size     = var.min_size      # Minimum for high availability
+    desired_size = var.desired_size # Target number of nodes
+    max_size     = var.max_size     # Maximum for auto-scaling
+    min_size     = var.min_size     # Minimum for high availability
   }
 
   # Update configuration
   # Best Practice: Rolling updates to avoid downtime
   update_config {
-    max_unavailable = 1  # Only one node unavailable during updates
+    max_unavailable = 1 # Only one node unavailable during updates
   }
 
   instance_types = var.instance_types
@@ -41,25 +41,24 @@ resource "aws_eks_node_group" "main" {
   
   # Justification: Labels enable targeted pod placement
   labels = {
-    Environment  = var.environment
-    NodeGroup    = var.node_group_name
-    Owner        = var.owner_name
-    Assignment   = "IaC-Project"
+    Environment = var.environment
+    NodeGroup   = var.node_group_name
+    Owner       = var.owner_name
+    Assignment  = "IaC-Project"
   }
 
   tags = {
-    Name           = "${var.node_group_name}-node"
-    Environment    = var.environment
-    Owner          = var.owner_name
-    ManagedBy      = "EKS"
-    NodeGroup      = var.node_group_name
+    Name        = "${var.node_group_name}-node"
+    Environment = var.environment
+    Owner       = var.owner_name
+    ManagedBy   = "EKS"
+    NodeGroup   = var.node_group_name
   }
 
   # Lifecycle policy
   # Best Practice: Prevent accidental deletion in production
   lifecycle {
     create_before_destroy = true
-   
     # Ignore changes to desired_size if using auto-scaling
     ignore_changes = [scaling_config[0].desired_size]
   }
