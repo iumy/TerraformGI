@@ -49,7 +49,7 @@ module "iam" {
   environment  = "Dev"
   cluster_name = "eks-cluster"
 }
-module "eks-cluster" {
+module "eks_cluster" {
   source                    = "../../modules/eks-cluster"
   environment               = "Dev"
   cluster_name              = "GI-EKS_Cluster"
