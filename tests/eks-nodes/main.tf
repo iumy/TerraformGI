@@ -74,11 +74,11 @@ module "eks_nodes" {
   disk_size   = 20
   environment = "Dev"
   owner_name  = "Gianluca Iumiento"
-  depends_on = [module.eks_cluster]
+  depends_on  = [module.eks-cluster]
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks_cluster.cluster_name
+  name = module.eks-cluster.cluster_name
 }
 
 provider "kubernetes" {

@@ -38,7 +38,6 @@ resource "aws_eks_node_group" "main" {
   ami_type      = "AL2_x86_64"
   disk_size     = var.disk_size
   capacity_type = "ON_DEMAND"
-  
   # Justification: Labels enable targeted pod placement
   labels = {
     Environment = var.environment
