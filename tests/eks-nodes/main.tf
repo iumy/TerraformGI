@@ -62,7 +62,7 @@ module "eks-cluster" {
 module "eks_nodes" {
   source          = "../../modules/eks-nodes"
   cluster_name    = module.eks_cluster.cluster_name
-  node_group_name = "${local.cluster_name}-node-group"
+  node_group_name = "GI-EKS_Cluster-node-group"
   node_role_arn   = module.iam.node_role_arn
   subnet_ids      = module.networking.private_subnet_ids
 
@@ -87,11 +87,3 @@ provider "kubernetes" {
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
-locals {
-  cluster_name = "Dev-eks-cluster"
-  common_tags = {
-    Environment = "Dev"
-    ManagedBy   = "Terraform"
-    Owner       = "Gianluca Iumiento"
-  }
-}
