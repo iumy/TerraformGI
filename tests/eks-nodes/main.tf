@@ -1,5 +1,5 @@
 # ============================================================================
-# EKS cluster test file
+# EKS nodes test file
 # ============================================================================
 terraform {
   required_version = ">= 1.0"
@@ -49,12 +49,41 @@ module "iam" {
   environment  = "Dev"
   cluster_name = "eks-cluster"
 }
-module "eks-cluster" {
+module "eks_cluster" {
   source                    = "../../modules/eks-cluster"
   environment               = "Dev"
   cluster_name              = "GI-EKS_Cluster"
   cluster_security_group_id = module.security.cluster_sg_id
   cluster_role_arn          = module.iam.cluster_role_arn
   subnet_ids                = module.networking.private_subnet_ids
+}
+
+
+module "eks_nodes" {
+  source          = "../../modules/eks-nodes"
+  cluster_name    = module.eks_cluster.cluster_name
+  node_group_name = "GI-EKS_Cluster-node-group"
+  node_role_arn   = module.iam.node_role_arn
+  subnet_ids      = module.networking.private_subnet_ids
+
+  instance_types = ["t3.small"]
+  desired_size   = 2
+  min_size       = 2
+  max_size       = 4
+  # Disk configuration
+  disk_size   = 20
+  environment = "Dev"
+  owner_name  = "Gianluca Iumiento"
+  depends_on  = [module.eks_cluster]
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks_cluster.cluster_name
+}
+
+provider "kubernetes" {
+  host                   = module.eks_cluster.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks_cluster.cluster_ca_certificate)
+  token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
