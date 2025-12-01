@@ -73,7 +73,7 @@ module "eks_nodes" {
   # Disk configuration
   disk_size   = 20
   environment = "Dev"
-  owner_name  = "Gianluca Iumiento"
+  owner_name  = "GianlucaIumiento"
   depends_on  = [module.eks_cluster]
 }
 
