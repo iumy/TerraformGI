@@ -132,12 +132,4 @@ provider "kubernetes" {
 # ============================================================================
 locals {
   cluster_name = "${var.environment}-eks-cluster"
-  # Common tags applied to all resources
-  # Computed from user inputs in terraform.tfvars
-  common_tags = {
-    Project     = "IaC-Assignment-EKS"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Owner       = var.owner_name
-  }
 }
