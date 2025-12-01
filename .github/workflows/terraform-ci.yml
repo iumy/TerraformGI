@@ -164,7 +164,26 @@ jobs:
       - name: Wait
         run: sleep 300
 
+  terraform-destroy:
+    if: always()
+    needs: terraform-apply
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5.1.0
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: Terraform Init
+        run: terraform init
+
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
+
 
       
