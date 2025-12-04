@@ -94,7 +94,7 @@ resource "kubernetes_deployment" "webapp" {
                     operator = "In"
                     values   = [var.app_name]
                   }
-                }        
+                }      
                 topology_key = "kubernetes.io/hostname"
               }
             }
@@ -129,7 +129,7 @@ resource "kubernetes_deployment" "webapp" {
             http_get {
               path = "/"
               port = 80
-            }         
+            }
             initial_delay_seconds = 30
             period_seconds        = 10
             timeout_seconds       = 5
@@ -159,7 +159,6 @@ resource "kubernetes_deployment" "webapp" {
         # Define volume from ConfigMap
         volume {
           name = "html-content"
-          
           config_map {
             name = kubernetes_config_map.webapp_html.metadata[0].name
           }
