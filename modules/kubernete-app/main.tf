@@ -66,7 +66,6 @@ resource "kubernetes_deployment" "webapp" {
     # Rolling update strategy
     strategy {
       type = "RollingUpdate"
-      
       rolling_update {
         max_surge       = 1 # One extra pod during update
         max_unavailable = 0 # All replicas available during update
@@ -88,7 +87,6 @@ resource "kubernetes_deployment" "webapp" {
           pod_anti_affinity {
             preferred_during_scheduling_ignored_during_execution {
               weight = 100
-              
               pod_affinity_term {
                 label_selector {
                   match_expressions {
@@ -96,8 +94,7 @@ resource "kubernetes_deployment" "webapp" {
                     operator = "In"
                     values   = [var.app_name]
                   }
-                }
-                
+                }        
                 topology_key = "kubernetes.io/hostname"
               }
             }
@@ -116,7 +113,7 @@ resource "kubernetes_deployment" "webapp" {
               memory = "128Mi"
             }
             limits = {
-              cpu    = "200m"  
+              cpu    = "200m"
               memory = "256Mi"
             }
           }
@@ -132,8 +129,7 @@ resource "kubernetes_deployment" "webapp" {
             http_get {
               path = "/"
               port = 80
-            }
-            
+            }         
             initial_delay_seconds = 30
             period_seconds        = 10
             timeout_seconds       = 5
@@ -146,7 +142,6 @@ resource "kubernetes_deployment" "webapp" {
               path = "/"
               port = 80
             }
-            
             initial_delay_seconds = 5
             period_seconds        = 5
             timeout_seconds       = 3
@@ -189,7 +184,6 @@ resource "kubernetes_service" "webapp" {
 
     annotations = {
       "service.beta.kubernetes.io/aws-load-balancer-type" = "nlb"
-      
       # Cross-zone load balancing
       "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled" = "true"
     }
