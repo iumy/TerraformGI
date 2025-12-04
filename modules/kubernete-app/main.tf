@@ -94,7 +94,7 @@ resource "kubernetes_deployment" "webapp" {
                     operator = "In"
                     values   = [var.app_name]
                   }
-                }      
+                }
                 topology_key = "kubernetes.io/hostname"
               }
             }
