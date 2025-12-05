@@ -73,7 +73,7 @@ output "application_url" {
   value       = "http://${module.kubernetes_app.load_balancer_hostname}"
 }
 
- output "load_balancer_hostname" {
+output "load_balancer_hostname" {
   description = "Load balancer hostname"
   value       = module.kubernete_app.load_balancer_hostname
 }

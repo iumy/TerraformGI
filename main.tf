@@ -136,10 +136,10 @@ module "kubernete_app" {
 
   cluster_name = module.eks_cluster.cluster_name
   app_name     = "webapp"
-  app_replicas = 2  # One per AZ for HA
+  app_replicas = 2 # One per AZ for HA
   owner_name   = var.owner_name
   environment  = var.environment
-  depends_on = [module.eks_nodes]
+  depends_on   = [module.eks_nodes]
 }
 
 # ============================================================================
