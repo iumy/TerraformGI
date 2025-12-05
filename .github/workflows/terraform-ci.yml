@@ -175,7 +175,7 @@ jobs:
           path: outputs.json
 
       - name: Wait
-        run: sleep 120
+        run: sleep 300
 
   deployment-test:
     needs: terraform-apply
@@ -275,7 +275,7 @@ jobs:
           for i in {1..30}; do
             READY_NODES=$(kubectl get nodes --no-headers 2>/dev/null | grep -c " Ready " || echo "0")
             if [ "$READY_NODES" -ge 2 ]; then
-              echo "✅ Kubernetes: $READY_NODES nodes Ready"
+              echo " Kubernetes: $READY_NODES nodes Ready"
               echo "ready_nodes=$READY_NODES" >> $GITHUB_OUTPUT
               break
             fi
@@ -286,7 +286,7 @@ jobs:
           # Final check
           READY_NODES=$(kubectl get nodes --no-headers 2>/dev/null | grep -c " Ready " || echo "0")
           if [ "$READY_NODES" -lt 2 ]; then
-            echo "❌ Only $READY_NODES nodes ready after 5 minutes"
+            echo "Only $READY_NODES nodes ready after 5 minutes"
             kubectl get nodes
             exit 1
           fi
