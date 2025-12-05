@@ -134,12 +134,11 @@ provider "kubernetes" {
 module "kubernete_app" {
   source = "./modules/kubernete-app"
 
-  cluster_name   = module.eks_cluster.cluster_name
-  app_name       = "webapp"
-  app_replicas   = 2  # One per AZ for HA
-  owner_name     = var.owner_name
-  environment    = var.environment
-  
+  cluster_name = module.eks_cluster.cluster_name
+  app_name     = "webapp"
+  app_replicas = 2  # One per AZ for HA
+  owner_name   = var.owner_name
+  environment  = var.environment
   depends_on = [module.eks_nodes]
 }
 

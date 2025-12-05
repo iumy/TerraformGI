@@ -68,14 +68,14 @@ output "node_group_status" {
 # APPLICATION OUTPUTS
 # ============================================================================
 
- output "application_url" {
+output "application_url" {
   description = "URL to access the application (may take 5-10 minutes to provision)"
   value       = "http://${module.kubernetes_app.load_balancer_hostname}"
 }
 
  output "load_balancer_hostname" {
   description = "Load balancer hostname"
- value       = module.kubernetes_app.load_balancer_hostname
+  value       = module.kubernete_app.load_balancer_hostname
 }
 
 # ============================================================================
