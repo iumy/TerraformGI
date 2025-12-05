@@ -393,7 +393,7 @@ jobs:
 
   terraform-destroy:
     if: always()
-    needs: terraform-apply
+    needs: deployment-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
