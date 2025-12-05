@@ -70,7 +70,7 @@ output "node_group_status" {
 
 output "application_url" {
   description = "URL to access the application (may take 5-10 minutes to provision)"
-  value       = "http://${module.kubernetes_app.load_balancer_hostname}"
+  value       = "http://${module.kubernete_app.load_balancer_hostname}"
 }
 
 output "load_balancer_hostname" {
@@ -99,7 +99,7 @@ output "deployment_info" {
     region           = var.aws_region
     environment      = var.environment
     node_count       = "${var.min_capacity}-${var.max_capacity} nodes"
-    # application_url  = "http://${module.kubernetes_app.load_balancer_hostname}"
+    # application_url  = "http://${module.kubernete_app.load_balancer_hostname}"
     owner = var.owner_name
   }
 }
