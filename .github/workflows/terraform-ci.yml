@@ -161,8 +161,235 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan.binary
 
+      - name: Save Terraform Outputs
+        id: outputs
+        run: |
+          terraform output -json > outputs.json
+          echo "CLUSTER_NAME=$(terraform output -raw cluster_name)" >> $GITHUB_ENV
+          echo "CLUSTER_ENDPOINT=$(terraform output -raw cluster_endpoint)" >> $GITHUB_ENV
+
+      - name: Upload Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-outputs
+          path: outputs.json
+
       - name: Wait
-        run: sleep 300
+        run: sleep 120
+
+  deployment-test:
+    needs: terraform-apply
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5.1.0
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Download Terraform Outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-outputs
+
+      - name: Extract Cluster Name
+        id: cluster
+        run: |
+          CLUSTER_NAME=$(jq -r '.cluster_name.value' outputs.json)
+          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+          echo "cluster_name=$CLUSTER_NAME" >> $GITHUB_OUTPUT
+
+      - name: Test EKS Control Plane
+        id: test_control_plane
+        run: |
+          echo "Testing EKS Control Plane..."
+          
+          CLUSTER_STATUS=$(aws eks describe-cluster \
+            --name ${{ env.CLUSTER_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'cluster.status' \
+            --output text)
+          
+          if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+            echo "Cluster status is $CLUSTER_STATUS, expected ACTIVE"
+            exit 1
+          fi
+          
+          echo "Control Plane: ACTIVE"
+          echo "status=ACTIVE" >> $GITHUB_OUTPUT
+
+      - name: Test EKS Node Group
+        id: test_nodes
+        run: |
+          echo "Testing EKS Node Group..."
+          
+          # Get node group name
+          NODE_GROUP=$(aws eks list-nodegroups \
+            --cluster-name ${{ env.CLUSTER_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'nodegroups[0]' \
+            --output text)
+          
+          # Check node group status
+          NODEGROUP_STATUS=$(aws eks describe-nodegroup \
+            --cluster-name ${{ env.CLUSTER_NAME }} \
+            --nodegroup-name $NODE_GROUP \
+            --region ${{ env.AWS_REGION }} \
+            --query 'nodegroup.status' \
+            --output text)
+          
+          if [ "$NODEGROUP_STATUS" != "ACTIVE" ]; then
+            echo "Node group status is $NODEGROUP_STATUS, expected ACTIVE"
+            exit 1
+          fi
+          
+          # Check node count
+          DESIRED=$(aws eks describe-nodegroup \
+            --cluster-name ${{ env.CLUSTER_NAME }} \
+            --nodegroup-name $NODE_GROUP \
+            --region ${{ env.AWS_REGION }} \
+            --query 'nodegroup.scalingConfig.desiredSize' \
+            --output text)
+          
+          echo "Node Group: ACTIVE with $DESIRED nodes"
+          echo "status=ACTIVE" >> $GITHUB_OUTPUT
+          echo "node_count=$DESIRED" >> $GITHUB_OUTPUT
+      
+      - name: Test Kubernetes Nodes
+        id: test_k8s_nodes
+        run: |
+          echo "Configuring kubectl..."
+          aws eks update-kubeconfig \
+            --name ${{ env.CLUSTER_NAME }} \
+            --region ${{ env.AWS_REGION }}
+          
+          echo "Waiting for nodes to be ready..."
+          for i in {1..30}; do
+            READY_NODES=$(kubectl get nodes --no-headers 2>/dev/null | grep -c " Ready " || echo "0")
+            if [ "$READY_NODES" -ge 2 ]; then
+              echo "✅ Kubernetes: $READY_NODES nodes Ready"
+              echo "ready_nodes=$READY_NODES" >> $GITHUB_OUTPUT
+              break
+            fi
+            echo "Waiting... ($i/30) - $READY_NODES nodes ready"
+            sleep 10
+          done
+          
+          # Final check
+          READY_NODES=$(kubectl get nodes --no-headers 2>/dev/null | grep -c " Ready " || echo "0")
+          if [ "$READY_NODES" -lt 2 ]; then
+            echo "❌ Only $READY_NODES nodes ready after 5 minutes"
+            kubectl get nodes
+            exit 1
+          fi
+          
+          # Display nodes
+          kubectl get nodes -o wide
+
+      - name: Test System Pods
+        id: test_system_pods
+        run: |
+          echo "Testing system pods..."
+          
+          # Wait for system pods
+          kubectl wait --for=condition=Ready pods --all -n kube-system --timeout=300s || true
+          
+          # Check system pod status
+          TOTAL=$(kubectl get pods -n kube-system --no-headers | wc -l)
+          RUNNING=$(kubectl get pods -n kube-system --no-headers | grep -c "Running" || echo "0")
+          
+          echo "System Pods: $RUNNING/$TOTAL Running"
+          kubectl get pods -n kube-system
+          
+          if [ "$RUNNING" -lt "$TOTAL" ]; then
+            echo "Warning: Not all system pods are running"
+          else
+            echo "All system pods Running"
+          fi
+          
+          echo "running_pods=$RUNNING" >> $GITHUB_OUTPUT
+          echo "total_pods=$TOTAL" >> $GITHUB_OUTPUT
+
+      - name: Test Application
+        id: test_application
+        run: |
+          echo "Testing application deployment..."
+          
+          # Check if webapp namespace exists
+          if kubectl get namespace webapp &>/dev/null; then
+            echo "Namespace 'webapp' exists"
+            
+            # Wait for application pods
+            kubectl wait --for=condition=Ready pods --all -n webapp --timeout=300s || true
+            
+            # Check application pods
+            APP_PODS=$(kubectl get pods -n webapp --no-headers | grep -c "Running" || echo "0")
+            echo "Application Pods: $APP_PODS Running"
+            kubectl get pods -n webapp
+            
+            # Check service
+            kubectl get svc -n webapp
+            
+            # Get load balancer
+            LB=$(kubectl get svc webapp -n webapp -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+            
+            if [ -n "$LB" ] && [ "$LB" != "<pending>" ]; then
+              echo "Load Balancer: $LB"
+              echo "lb_hostname=$LB" >> $GITHUB_OUTPUT
+              
+              # Wait for load balancer to be accessible (max 10 minutes)
+              echo "Waiting for load balancer to be accessible..."
+              for i in {1..60}; do
+                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://$LB" || echo "000")
+                if [ "$HTTP_CODE" == "200" ]; then
+                  echo "Application accessible (HTTP $HTTP_CODE)"
+                  echo "accessible=true" >> $GITHUB_OUTPUT
+                  break
+                fi
+                echo "Waiting... ($i/60) - HTTP $HTTP_CODE"
+                sleep 10
+              done
+            else
+              echo "Load Balancer still provisioning"
+            fi
+          else
+            echo "Application not deployed yet"
+          fi
+
+      # ======================================================================
+      # TEST SUMMARY
+      # ======================================================================
+      - name: Generate Test Report
+        if: always()
+        run: |
+          echo "## EKS Deployment Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Control Plane | ${{ steps.test_control_plane.outputs.status }} | Cluster Active |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node Group | ${{ steps.test_nodes.outputs.status }} | ${{ steps.test_nodes.outputs.node_count }} nodes |" >> $GITHUB_STEP_SUMMARY
+          echo "| Kubernetes Nodes | Ready | ${{ steps.test_k8s_nodes.outputs.ready_nodes }} nodes ready |" >> $GITHUB_STEP_SUMMARY
+          echo "| System Pods | Running | ${{ steps.test_system_pods.outputs.running_pods }}/${{ steps.test_system_pods.outputs.total_pods }} pods |" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.test_application.outputs.accessible }}" == "true" ]; then
+            echo "| Application | Accessible | http://${{ steps.test_application.outputs.lb_hostname }} |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Application | Provisioning | Load balancer pending |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cluster**: ${{ env.CLUSTER_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region**: ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed**: ${{ env.DEPLOYMENT_TIME }}" >> $GITHUB_STEP_SUMMARY
 
   terraform-destroy:
     if: always()
